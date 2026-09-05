@@ -1,0 +1,126 @@
+{
+  // Waybar Glass Capsule — 布局 v3 (2026-09-04 用户定制)
+  // 左: Arch图标 | 工作区 | 窗口名 | 工具箱
+  // 中: 媒体 | 时钟
+  // 右: CPU | 温度 | GPU(AMD为主) | 内存 | 网络+蓝牙(合并) | 音量 | 托盘 | 电池 | 电源
+  // 已移除: 输入法胶囊(托盘有fcitx5图标) / 更新胶囊 / 独立日期胶囊 / 独立蓝牙胶囊
+  // 托盘蓝牙图标: blueman-applet/tray 已 mask
+  "include": [
+    "modules.jsonc"
+  ],
+
+  "layer": "overlay",
+  "position": "top",
+  "height": 44,
+  "spacing": 6,
+  "margin-top": 8,
+  "margin-left": 10,
+  "margin-right": 10,
+  "reload_style_on_change": true,
+
+  "modules-left": [
+    "custom/logo",
+    "niri/workspaces",
+    "niri/window",
+    "custom/actions"
+  ],
+
+  "modules-center": [
+    "mpris",
+    "clock"
+  ],
+
+  "modules-right": [
+    "tray",
+    "cpu",
+    "custom/cputemp",
+    "custom/gpu",
+    "memory",
+    "group/netbt#nb",
+    "pulseaudio",
+    "battery",
+    "custom/powerbtn"
+  ],
+
+  // ═══════════ 模块定义 ═══════════
+
+  "custom/logo": {
+    "format": "󰣇",
+    "tooltip": false,
+    "on-click": "fuzzel"
+  },
+
+  "custom/actions": {
+    "tooltip-format": "左键：工具箱 (剪贴板/截图/维护)\n右键：壁纸切换",
+    "format": "󰀻",
+    "on-click": "~/.config/waybar/scripts/command-center.sh",
+    "on-click-right": "waypaper"
+  },
+
+  "cpu": {
+    "format": "󰻠 {usage}%",
+    "interval": 2,
+    "tooltip-format": "{usage}%\n负载: {load} 核心: {ncores}"
+  },
+
+  "custom/cputemp": {
+    "exec": "~/.config/waybar/scripts/cputemp.sh",
+    "interval": 3,
+    "tooltip": false
+  },
+
+  "custom/gpu": {
+    "exec": "~/.config/waybar/scripts/gpu.sh",
+    "interval": 3,
+    "return-type": "json",
+    "on-click": "ghostty --class=floating-term -e nvtop"
+  },
+
+  "memory": {
+    "format": "󰑭 {percentage}%",
+    "interval": 5,
+    "tooltip-format": "{used:0.1f}G / {total:0.1f}G"
+  },
+
+  // 网络 + 蓝牙 合并胶囊 (class nb)
+  "group/netbt#nb": {
+    "orientation": "inherit",
+    "modules": [
+      "network",
+      "custom/bluetooth"
+    ]
+  },
+
+  "custom/bluetooth": {
+    "exec": "~/.config/waybar/scripts/bluetooth.sh",
+    "interval": 5,
+    "on-click": "bluetoothctl power toggle",
+    "on-click-right": "ghostty --class=bluetui -e bluetui",
+    "tooltip": false
+  },
+
+  // 电源键: 无 hover 抽屉, 点击弹出 fuzzel 电源菜单 (同工具箱交互逻辑)
+  "custom/powerbtn": {
+    "format": "󰐥",
+    "tooltip-format": "左键：电源菜单 (锁屏/注销/重启/关机)",
+    "on-click": "~/.config/niri/scripts/powermenu"
+  },
+
+  "pulseaudio": {
+    "format": "{icon} {volume}%",
+    "format-muted": "󰝟",
+    "format-icons": {
+      "default": ["󰕿", "󰖀", "󰕾"]
+    },
+    "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    "on-click-right": "pavucontrol",
+    "scroll-step": 5
+  },
+
+  // 电源键: 无 hover 抽屉, 点击打开 fuzzel 电源菜单 (复用 niri scripts/powermenu)
+  "custom/powerbtn": {
+    "format": "󰐥",
+    "tooltip-format": "左键：电源菜单 (锁屏/重启/关机)",
+    "on-click": "~/.config/niri/scripts/powermenu"
+  }
+}

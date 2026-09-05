@@ -1,0 +1,19 @@
+// Niri dynamic colors
+// Generated with Matugen (template: ~/.config/matugen/templates/niri-colors.kdl)
+// 被 ~/.config/niri/config.kdl include, 请勿直接编辑本文件
+// 应用后通过 `niri msg action load-config-file` 重载
+
+layout {
+    focus-ring {
+        active-gradient from="#8ad0efcc" to="#c6c2eacc" angle=135
+        inactive-color "#40484c66"
+        urgent-color "#ffb4ab"
+    }
+}
+
+recent-windows {
+    highlight {
+        active-color "#262b2d"
+        urgent-color "#ffb4ab"
+    }
+}

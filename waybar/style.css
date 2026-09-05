@@ -1,0 +1,208 @@
+/* ═══════════════════════════════════════════════════════════════
+   Waybar Glass Capsule — 布局 v3 (每模块独立小胶囊)
+   选择器: 全部 #模块id + 合并胶囊 .nb (group/netbt#nb 的 class)
+   分组容器(除.nb)透明。紧凑规格: bar 34 / 胶囊 21 / 字号 13
+   ═══════════════════════════════════════════════════════════════ */
+@import "colors.css";
+
+/* ─── 玻璃度控制层 ─── */
+@define-color glass-top           alpha(@surface_container_high, 0.52);
+@define-color glass-bottom        alpha(@surface_container_low, 0.68);
+@define-color glass-top-hover     alpha(@surface_container_highest, 0.62);
+@define-color glass-bottom-hover  alpha(@surface_container_high, 0.76);
+@define-color glass-edge          alpha(@outline_variant, 0.60);
+@define-color glass-edge-dark     alpha(@scrim, 0.45);
+@define-color glass-shadow        alpha(@scrim, 0.25);
+@define-color glass-shine         rgba(255, 255, 255, 0.16);
+@define-color glass-shine-hover   rgba(255, 255, 255, 0.28);
+
+* {
+    font-family: "JetBrainsMono Nerd Font", "Noto Sans CJK SC", sans-serif;
+    font-size: 15.5px;
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+    background: transparent;
+}
+
+window#waybar {
+    background: transparent;
+    color: @on_surface;
+}
+
+.modules-left, .modules-center, .modules-right {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+/* ═══════════ 统一玻璃胶囊: 每个模块一个 ═══════════ */
+#custom-logo, #workspaces, #window, #custom-actions, #mpris, #clock,
+#cpu, #custom-cputemp, #custom-gpu, #memory, .nb, #pulseaudio,
+#tray, #battery, #custom-powerbtn {
+    background: linear-gradient(180deg, @glass-top 0%, @glass-bottom 100%);
+    border: 1px solid @glass-edge;
+    border-top-color: @glass-shine;
+    border-bottom-color: @glass-edge-dark;
+    border-radius: 999px;
+    margin: 7px 3px;
+    padding: 0 11px;
+    min-height: 30px;
+    box-shadow: inset 0 1px 0 @glass-shine
+}
+
+/* hover: 只亮自己 */
+#custom-logo:hover, #workspaces:hover, #window:hover, #custom-actions:hover,
+#mpris:hover, #clock:hover, #cpu:hover, #custom-cputemp:hover, #custom-gpu:hover,
+#memory:hover, .nb:hover, #pulseaudio:hover, #tray:hover, #battery:hover,
+#custom-powerbtn:hover {
+    background: linear-gradient(180deg, @glass-top-hover 0%, @glass-bottom-hover 100%);
+    border-top-color: @glass-shine-hover;
+    box-shadow: inset 0 1px 0 @glass-shine-hover;
+}
+
+/* tooltip */
+tooltip {
+    background: alpha(@surface_container_high, 0.94);
+    border: 1px solid @glass-edge;
+    border-radius: 12px;
+    color: @on_surface;
+}
+tooltip label { color: @on_surface; font-size: 14px; }
+
+/* ═══ 微调 ═══ */
+
+/* 纯图标胶囊: 统一宽度防"竹子" */
+#custom-logo, #custom-actions, #custom-cputemp {
+    min-width: 42px;
+    padding: 0 6px;
+}
+
+#custom-logo   { color: @primary; font-size: 18px; }
+#custom-actions{ color: @primary; font-size: 16px; }
+
+/* 工作区胶囊内部按钮 */
+#workspaces {
+    padding: 0 4px;
+}
+#workspaces button {
+    padding: 0 6px;
+    margin: 2px 1px;
+    min-height: 18px;
+    min-width: 24px;
+    border-radius: 999px;
+    color: @outline;
+    background: transparent;
+    font-size: 14px;
+    box-shadow: none;
+}
+#workspaces button.active {
+    color: @on_primary;
+    background: linear-gradient(135deg, alpha(@primary, 0.92) 0%, alpha(@tertiary, 0.80) 100%);
+    font-weight: bold;
+    min-width: 28px;
+}
+#workspaces button.occupied { color: @on_surface_variant; }
+#workspaces button.empty    { color: alpha(@outline, 0.45); }
+#workspaces button.urgent   { color: @error; }
+#workspaces button:hover {
+    background: alpha(@primary, 0.22);
+    color: @on_surface;
+}
+
+/* 窗口名 */
+#window {
+    color: @on_surface_variant;
+    padding: 0 10px;
+}
+
+/* 中央 */
+#mpris { color: @on_surface; }
+#mpris.playing { color: @primary; }
+#mpris.paused  { color: @on_surface_variant; opacity: 0.8; }
+
+#clock {
+    font-size: 16.5px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    color: @on_surface;
+}
+
+/* 硬件状态配色 */
+#cpu            { color: @secondary; }
+#custom-cputemp { color: @on_surface_variant; }
+#custom-gpu     { color: @primary; }
+#memory         { color: @tertiary; }
+
+/* ═══ 合并胶囊 .nb: 网络+蓝牙 共用一个胶囊, 子模块透明 ═══ */
+#network, #custom-bluetooth {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    margin: 0 3px;
+    padding: 0;
+}
+#network { margin-right: 6px; }
+#network { color: @secondary; }
+#network.disconnected { color: @error; }
+#custom-bluetooth { color: @secondary; }
+
+/* 音量 */
+#pulseaudio { color: @tertiary; }
+#pulseaudio.muted { color: @outline; }
+
+/* 电池 */
+#battery { color: @secondary; }
+#battery.warning  { color: @tertiary; }
+#battery.critical { color: @error; }
+#battery.charging { color: @primary; }
+
+/* 空桌面时隐藏窗口名胶囊 (niri/window 原生 empty 状态) */
+window#waybar.empty #window {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* 托盘右键菜单: 不透明玻璃深色 (仅 waybar 进程内生效, 不影响 GTK 全局/niri 窗口透明度) */
+menu {
+    background: @surface_container_high;
+    border: 1px solid @glass-edge;
+    border-radius: 10px;
+    padding: 4px;
+}
+menu > menuitem {
+    background: transparent;
+    color: @on_surface;
+    padding: 5px 12px;
+    border-radius: 6px;
+    min-height: 20px;
+}
+menu > menuitem:hover {
+    background: alpha(@primary, 0.25);
+}
+menu > separator { background: alpha(@outline_variant, 0.6); }
+
+/* 托盘 */
+#tray { padding: 0 5px; }
+#tray > .passive { -gtk-icon-effect: dim; }
+#tray > .needs-attention { -gtk-icon-effect: highlight; }
+
+/* 音量滑条 (未使用, 保留兜底) */
+#pulseaudio-slider {
+    background: alpha(@surface_container, 0.7);
+    border-radius: 10px;
+}
+#pulseaudio-slider slider {
+    background: @primary;
+    border-radius: 6px;
+}
+
+/* 电源键胶囊 (点击 fuzzel 菜单, 无 hover 抽屉) */
+#custom-powerbtn {
+    color: @error;
+    font-size: 18px;
+    min-width: 42px;
+}

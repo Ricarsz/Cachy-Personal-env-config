@@ -1,0 +1,24 @@
+#!/bin/bash
+# 电源菜单 (fuzzel) — 仅 关机/重启/关闭屏幕 (suspend 已 mask)
+if [[ "$LANG" == zh_* ]]; then
+    OPT_SCREEN_OFF="关闭屏幕"
+    OPT_REBOOT="重启"
+    OPT_POWEROFF="关机"
+else
+    OPT_SCREEN_OFF="Screen Off"
+    OPT_REBOOT="Reboot"
+    OPT_POWEROFF="Shutdown"
+fi
+OPTIONS="${OPT_SCREEN_OFF}\n${OPT_REBOOT}\n${OPT_POWEROFF}"
+CHOICE=$(echo -e "$OPTIONS" | fuzzel --dmenu --width 12 --lines 3)
+case "$CHOICE" in
+    "$OPT_SCREEN_OFF")
+        niri msg action power-off-monitors
+    ;;
+    "$OPT_REBOOT")
+        systemctl reboot
+    ;;
+    "$OPT_POWEROFF")
+        systemctl poweroff
+    ;;
+esac
