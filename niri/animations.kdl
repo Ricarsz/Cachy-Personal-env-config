@@ -1,79 +1,104 @@
-// Animation settings.
-// The wiki explains how to configure individual animations:
-// https://yalter.github.io/niri/Configuration:-Animations
-// https://yalter.github.io/niri/Configuration:-Animations
+// Niri 动画配置文件
+// 
+// 动画类型：
+//   1. Spring（弹簧动画）：基于物理模型，支持阻尼和回弹
+//   2. Duration（时长动画）：固定时长 + 缓动曲线
+//
+// 缓动曲线参考：
+//   设计曲线：https://easings.co/
+//   预览效果：https://easings.net/
+
 animations {
-    // 禁用全部动画
+    // 禁用所有动画（性能优化或无障碍需求）
     //off
 
-    // 总体动画速度，浮点数(带小数点)，默认为1，小于1加快，大于1减慢
+    // 全局动画速度倍率
+    // < 1.0：加速；> 1.0：减速；1.0：正常速度
     slowdown 1.14514
-    
 
-    // 切换工作区的动画
+    // ==================== 工作区切换 ====================
     workspace-switch {
-    	// 具体动画设置代码块里的off可以单独禁用此动画
-	//off
-	// spring弹簧动画类型
-	// damping-ratio 设置阻尼，默认1.0（仅在触摸板快速滑动时产生回弹），小于1.0会产生回弹，大于1.0会导致bug。
-	// stiffness 设置刚度，数值越大动画会越硬越生涩，数值调低更容易产生回弹 
-	// epsilon 当动画运动速度和距离小于这个值的时候会判定动画停止
+        // off：单独禁用此动画
+        
+        // Spring 弹簧动画参数：
+        // damping-ratio（阻尼比）：
+        //   = 1.0：临界阻尼，无回弹（默认）
+        //   < 1.0：欠阻尼，有回弹效果
+        //   > 1.0：过阻尼，可能导致动画异常
+        // stiffness（刚度）：
+        //   数值越大，弹簧越硬，动画越生涩
+        //   数值越小，弹簧越软，回弹越明显
+        // epsilon（精度）：
+        //   当动画速度和位移小于此值时，动画停止
+        //   值越小，动画越精确，但计算开销越大
         spring damping-ratio=0.82 stiffness=400 epsilon=0.0001
     }
 
-    // 左右切换聚焦的动画
+    // ==================== 水平视图移动 ====================
+    // 左右切换焦点/移动列时的动画
     horizontal-view-movement {
         spring damping-ratio=0.84 stiffness=400 epsilon=0.0001
     }
 
-    // 打开窗口的动画
+    // ==================== 窗口打开 ====================
+    // Duration 动画（已禁用，使用 Spring 替代）
     /-window-open {
-    	// 动画时长
         duration-ms 150
-	// 动画曲线
         curve "ease-out-expo"
-
-	// niri可用的动画曲线：
-	// ease-out-quad 比较平缓的加速-->减速曲线，不明显，算是更生动的线性动画
-	// ease-out-cubic 较快加速后迅速减速
-	// ease-out-expo 超快加速后立马减速
-	// linear 纯线性 
-	// cubic-bezier 自定义动画曲线，通过 curve "cubic-bezier" 0.05 0.7 0.1 1 的方式传入参数使用
-	// 设计曲线可以使用 https://easings.co/
-	// 预览预设曲线效果可以看 https://easings.net/
+        
+        // 可用缓动曲线：
+        // ease-out-quad：平缓减速，类似线性但更自然
+        // ease-out-cubic：较快加速后迅速减速
+        // ease-out-expo：指数级加速后瞬间减速（最流畅）
+        // linear：线性动画（无加速/减速）
+        // cubic-bezier：自定义贝塞尔曲线
+        //   语法：curve "cubic-bezier" x1 y1 x2 y2
+        //   示例：curve "cubic-bezier" 0.05 0.7 0.1 1
     }
+    
+    // Spring 动画（当前启用）
     window-open {
         spring damping-ratio=1.0 stiffness=2400 epsilon=0.0001
     }
-    
-    // 关闭窗口
+
+    // ==================== 窗口关闭 ====================
+    // Duration 动画（已禁用）
     /-window-close {
-        duration-ms 150 
+        duration-ms 150
         curve "ease-out-quad"
     }
+    
+    // Spring 动画（当前启用）
+    // 较低的阻尼比（0.8）产生轻微回弹效果
     window-close {
         spring damping-ratio=0.8 stiffness=400 epsilon=0.0001
     }
 
-    // 移动窗口的动画。包括合并列、上下移动窗口、合并/踢出列等。
+    // ==================== 窗口移动 ====================
+    // 包括：合并列、上下移动窗口、合并/踢出列等
+    // 临界阻尼（1.0），高刚度（800）确保动画快速响应
     window-movement {
         spring damping-ratio=1.0 stiffness=800 epsilon=0.0001
     }
-    
-    // 按照预设调整窗口大小时的动画
+
+    // ==================== 窗口调整大小 ====================
+    // 按预设切换宽度/高度时的动画
+    // 略低的阻尼比（0.9）产生轻微弹性效果
     window-resize {
         spring damping-ratio=0.9 stiffness=500 epsilon=0.0001
     }
-   
-    // 开启截图UI的动画
+
+    // ==================== 截图界面 ====================
+    // 截图 UI 打开动画（Duration 类型）
     screenshot-ui-open {
-        duration-ms 300 
+        duration-ms 300
         curve "ease-out-quad"
     }
 
-    // 开关overview的动画
+    // ==================== 总览界面 ====================
+    // Overview 打开/关闭动画
+    // 临界阻尼，高刚度（900）确保快速响应
     overview-open-close {
         spring damping-ratio=1.0 stiffness=900 epsilon=0.0001
     }
-
 }

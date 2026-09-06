@@ -1,10 +1,6 @@
-//  ██████  ██   ██  ██████  ███████ ██ ███    ██ 
-//  ██      ██   ██ ██    ██ ██   ██    ██ ██  ██ 
-//  ███████ ███████ ██    ██ ██████  ██ ██ ██  ██ 
-//       ██ ██   ██ ██    ██ ██   ██ ██ ██  ██ ██ 
-//  ██████  ██   ██  ██████  ██   ██ ██ ██   ████ 
-// 这是niri的配置文件，我写了很多注释方便阅读，同时保留了部分英文注释
-// 自25.11版本起，niri的配置文件支持了拆分，每一条include都代表把已经拆分出去的配置文件嵌入进来。
+// Niri 窗口管理器主配置文件
+// 支持模块化配置拆分（v25.11+），通过 include 指令引入子配置
+// optional=true 表示文件不存在时不报错，便于多设备复用同一套配置
 include "binds.kdl"
 include optional=true "rule.kdl"
 include optional=true "output.kdl"
@@ -12,238 +8,258 @@ include optional=true "animations.kdl"
 include optional=true "layout.kdl"
 include optional=true "blur.kdl" 
 include optional=true "debug.kdl"
-// 截图保存位置
+
+// 截图保存路径，支持 strftime 时间格式化
+// %Y=年 %m=月 %d=日 %H=时 %M=分 %S=秒
 screenshot-path "~/Pictures/Screenshots/Niri-screenshots/%Y-%m-%d %H-%M-%S.png"
 
-// 环境变量
-
+// 环境变量：进程启动时注入，子进程自动继承
 environment {
+    // 系统语言优先级：中文优先，英文回退
     LANGUAGE "zh_CN:en"
     LANG "zh_CN.UTF-8"
-    // 标准数据目录 (微信等应用依赖, 消除 XDG_DATA_DIRS 警告)
+    
+    // XDG_DATA_DIRS：应用程序数据搜索路径
+    // 微信、Wine 等程序依赖此变量定位资源文件
+    // 若不设置会触发 GLib-GIO 警告
     XDG_DATA_DIRS "/usr/local/share:/usr/share"
-    // 输入法环境变量
+    
+    // 输入法框架配置（Fcitx5）
+    // XMODIFIERS：X11 输入法协议标识，GTK/Qt 应用通过此变量识别输入法
+    // QT_IM_MODULES：Qt 输入法加载顺序，wayland 优先，fcitx 兜底
     XMODIFIERS "@im=fcitx"
     QT_IM_MODULES "wayland;fcitx"
-    // qt主题
+    
+    // Qt 主题引擎配置
+    // gtk3 引擎可读取 GTK 主题配色，保持 Qt/GTK 应用视觉一致
+    // Qt5 和 Qt6 需要分别设置
     QT_QPA_PLATFORMTHEME "gtk3"
     QT_QPA_PLATFORMTHEME_QT6 "gtk3"
-    // 解决quickshell图标主题缺失问题
-    QS_ICON_THEME "Adwaita"
-    // GTK软件使用的渲染器，可以解决n卡双显卡导致的GTK应用启动缓慢问题，AMD或Intel单显卡不需要这行设置可以注释掉
-    GSK_RENDERER "gl"
-    // 默认文本编辑器
-    EDITOR "zeditor"
     
+    // QuickShell 图标主题回退值
+    // 解决部分图标在 QuickShell 中无法正确加载的问题
+    QS_ICON_THEME "Adwaita"
+    
+    // GTK 渲染器选择
+    // "gl" 使用 OpenGL 渲染，解决 NVIDIA 双显卡环境下 GTK 应用启动延迟问题
+    // AMD/Intel 单显卡可注释此行，使用默认的 Vulkan 渲染器
+    GSK_RENDERER "gl"
+    
+    // 默认终端文本编辑器（供 git commit 等场景调用）
+    EDITOR "zeditor"
 }
+
 // 光标配置
 cursor {
-    // 主题，存放路径在~/.local/share/icons
+    // 光标主题名称，对应 ~/.local/share/icons/ 下的目录
     xcursor-theme "breeze_cursors"
-    // 大小
+    
+    // 光标尺寸（像素），HiDPI 屏幕建议 24-36
     xcursor-size 30
-    // 闲置多少毫秒自动隐藏光标
+    
+    // 闲置自动隐藏延迟（毫秒），0 表示永不隐藏
     hide-after-inactive-ms 15000
+    
+    // 晃动放大：快速移动鼠标时放大光标，便于定位
     shake-to-enlarge {
-	//off
-	//grow
-	grow-speed 0.01
-        threshold 2000
-	hold-duration-ms 1500
-	zoom-factor 7
+        // grow：放大效果；off：禁用
+        grow-speed 0.01      // 放大速度（越小越慢）
+        threshold 2000       // 触发阈值（像素/秒）
+        hold-duration-ms 1500 // 放大后保持时间
+        zoom-factor 7        // 放大倍率
     }
 }
- 
-// 带缩略图的alt+tab切换窗口功能（但是我设置的是super+tab，更符合逻辑）
+
+// Alt+Tab 窗口切换器（带缩略图预览）
+// 支持按工作区/显示器/全局范围过滤窗口
 recent-windows {
-    // 取消//off的注释可以禁用
-    // off
-    debounce-ms 750
-    open-delay-ms 150
+    // off：禁用此功能
+    debounce-ms 750        // 防抖延迟，避免快速切换时闪烁
+    open-delay-ms 150      // 打开动画延迟
 
     highlight {
-        active-color "#999999ff"
-        urgent-color "#ff9999ff"
-        // 缩略图背景内间距
-        padding 30
-        // 缩略图的背景圆角
-        corner-radius 12
+        active-color "#999999ff"   // 活动窗口高亮色（RGBA）
+        urgent-color "#ff9999ff"   // 紧急窗口高亮色
+        padding 30                 // 缩略图内边距
+        corner-radius 12           // 缩略图圆角半径
     }
 
-	//设置缩略图大小
+    // 缩略图尺寸限制
     previews {
-        max-height 480
-        max-scale 0.2
+        max-height 480     // 最大高度（像素）
+        max-scale 0.2      // 相对于原窗口的最大缩放比例
     }
 
     binds {
-        // scope可以设置显示的窗口是当前工作区的、还是当前显示器的、或者显示全部窗口
+        // scope 过滤范围：
+        //   workspace = 当前工作区
+        //   output    = 当前显示器
+        //   global    = 所有窗口
         Mod+Tab         { next-window scope="workspace"; }
         Mod+Shift+Tab   { previous-window scope="workspace"; }
-        // grave是波浪键，显示当前应用的所有窗口
+        
+        // filter 过滤模式：
+        //   app-id = 仅显示当前应用的所有窗口
+        // grave 键即波浪键（`）
         Mod+grave       { next-window     filter="app-id"; }
         Mod+Shift+grave { previous-window filter="app-id"; }
     }
 }
-// 这是include进来的颜色文件，主要设置了窗口边框
+
+// 引入窗口边框/颜色配置（分离便于主题切换）
 include "colors.kdl"
 
+// 输入设备配置
 input {
     keyboard {
         xkb {
-            // You can set rules, model, layout, variant and options.
-            // For more information, see xkeyboard-config(7).
-
-            // For example:
-            // layout "us,ru"
-            // options "grp:win_space_toggle,compose:ralt,ctrl:nocaps"
-
-            // If this section is empty, niri will fetch xkb settings
-            // from org.freedesktop.locale1. You can control these using
-            // localectl set-x11-keymap.
+            // XKB 键盘布局配置
+            // layout: 逗号分隔的布局列表，如 "us,cn"
+            // options: XKB 选项，如 "grp:alt_shift_toggle" 切换布局快捷键
+            // 留空则从 localectl 读取系统默认值
         }
 
-        // Enable numlock on startup, omitting this setting disables it.
+        // 启用数字键盘（注释则禁用）
         //numlock
-	    repeat-delay 250
-	    repeat-rate 35
+        repeat-delay 250   // 按键重复触发前的延迟（毫秒）
+        repeat-rate 35     // 每秒重复次数
     }
 
-    // Next sections include libinput settings.
-    // Omitting settings disables them, or leaves them at their default values.
-    // All commented-out settings here are examples, not defaults.
+    // 触摸板配置（libinput 驱动）
     touchpad {
-        // off
-        tap
-        // dwt
-        // dwtp
-        // drag false
-        // drag-lock
-        // nautural-scroll可以翻转触摸板滚动的方向
-        natural-scroll
-        //accel-speed -0.5
-        // accel-profile "flat"
-        // scroll-method "two-finger"
-        // disabled-on-external-mouse
+        // off：禁用触摸板
+        tap              // 轻触点击（替代物理按键）
+        // dwt：打字时禁用触摸板（防误触）
+        // dwtp：连接鼠标时禁用触摸板
+        // drag：拖拽锁定（双击拖拽）
+        // drag-lock：拖拽锁定超时
+        natural-scroll   // 自然滚动（内容随手指方向移动）
+        //accel-speed -0.5 // 光标速度（-1 到 1）
+        // accel-profile "flat"  // 平坦加速（无加速度，适合游戏）
+        // scroll-method "two-finger"  // 双指滚动
+        // disabled-on-external-mouse  // 插入鼠标时禁用触摸板
     }
 
+    // 鼠标配置
     mouse {
-        
-	// off
-        // natural-scroll
-        // 鼠标速度
-        accel-speed 0
-        // 禁用鼠标加速 
-        accel-profile "flat"
-	// scroll-method "no-scroll"
-        //speed of scroll,like:
-        //scroll-factor horizontal=2.0 vertical=-5.0 
+        // off：禁用鼠标
+        // natural-scroll  // 自然滚动（通常鼠标不需要）
+        accel-speed 0      // 光标速度
+        accel-profile "flat" // 禁用加速度，保持线性移动
+        // scroll-method "no-scroll"  // 禁用滚轮
+        // scroll-factor horizontal=2.0 vertical=-5.0  // 滚轮速度倍率
     }
 
+    // 指点杆配置（ThinkPad 小红点等）
     trackpoint {
         // off
         // natural-scroll
         // accel-speed 0.2
         // accel-profile "flat"
-        // scroll-method "on-button-down"
+        // scroll-method "on-button-down"  // 按住按钮时滚动
         // scroll-button 273
         // scroll-button-lock
-        // middle-emulation
+        // middle-emulation  // 中键模拟
     }
 
-    // Uncomment this to make the mouse warp to the center of newly focused windows.
+    // 窗口聚焦时自动将鼠标移到窗口中心
     //warp-mouse-to-focus
 
-    // Focus windows and outputs automatically when moving the mouse into them.
-    // Setting max-scroll-amount="0%" makes it work only on windows already fully on screen.
+    // 鼠标进入窗口时自动聚焦
+    // max-scroll-amount="50%" 表示窗口可见面积超过 50% 时才触发
     //focus-follows-mouse max-scroll-amount="50%"
 }
 
-//blur
+// 模糊效果配置（需单独引入 blur.kdl）
 //blur {
-	// off
-	//passes 3
-	//offset 2
-	//noise 0.02
-	//saturation 1.5 
+//  off
+//  passes 3       // 模糊迭代次数（越多越模糊，性能越差）
+//  offset 2       // 采样偏移量
+//  noise 0.02     // 噪声强度
+//  saturation 1.5 // 饱和度增强
 //}
 
+// 总览界面（Overview）配置
 overview {
-	workspace-shadow {
-	//off
-	}
-	//缩放
-	zoom 0.55
+    workspace-shadow {
+        // off：禁用工作区阴影
+    }
+    zoom 0.55  // 总览缩放比例（0.1-1.0，越小越缩放）
 }
-// Add lines like this to spawn processes at startup.
-// Note that running niri as a session supports xdg-desktop-autostart,
-// which may be more convenient to use.
-// See the binds section below for more ipawn examples.
 
-// This line starts waybar, a commonly used bar for Wayland compositors.
-// 自动启动设置
-// 桌面壁纸的守护进程
+// 自动启动程序列表
+// 也可通过 xdg-desktop-autostart 规范管理（放在 ~/.config/autostart/）
+// 壁纸守护进程（支持多显示器独立壁纸）
 spawn-at-startup "awww-daemon"
-// 总览界面背景壁纸的守护进程
+// 总览界面背景壁纸守护进程（namespace 隔离）
 spawn-at-startup "awww-daemon" "-n" "overview"
-// 随机更换一张壁纸
+// 延迟 2 秒恢复上次壁纸（等待 awww-daemon 就绪）
 spawn-sh-at-startup "sleep 2 &&  waypaper --restore"
-// 恢复壁纸
 //spawn-at-startup "waypaper" "--restore"
-// 询问管理员权限功能（身份验证）
+
+// PolicyKit 认证代理：弹出权限请求对话框
+// 缺失会导致 sudo/gksu 等操作无响应
 spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
-// 屏幕分享、录屏相关的环境设置,如果屏幕分享出异常的话可以开启
- spawn-sh-at-startup "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=niri LANG LANGUAGE LC_MESSAGES LC_CTYPE"
-// GNOME tracker修复
+
+// D-Bus 环境变量同步到 systemd 用户会话
+// 修复屏幕分享/录屏在 Wayland 下无法工作的问题
+spawn-sh-at-startup "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=niri LANG LANGUAGE LC_MESSAGES LC_CTYPE"
+
+// GNOME Tracker 服务修复
+// 设置会话类型为 user，避免 Tracker 误判为系统服务
 spawn-sh-at-startup "systemctl --user set-environment XDG_SESSION_CLASS=user"
-// 通知程序
+
+// 通知守护进程
 spawn-at-startup "mako"
-// 任务栏
+// 状态栏
 spawn-at-startup "waybar"
-// 输入法
+// 输入法守护进程
 spawn-at-startup "fcitx5" 
-// 剪贴板守护进程
-	//cliphist
+
+// 剪贴板历史管理
+// wl-paste --watch 监听剪贴板变化，cliphist store 存入历史
 spawn-at-startup "wl-paste" "--watch" "cliphist" "store"
-// 闲置时自动熄屏锁屏睡眠的脚本，说实话这东西用处不大，建议用 mod+shift+P 打开电源菜单。
-// 大写锁定键的osd显示
+
+// CapsLock 按键 OSD 提示
 spawn-at-startup "swayosd-server"
-// 自动开启护眼模式,经纬度设置位置
-// 截图音效的守护进程
+
+// 截图音效守护进程（监听 SIGUSR1 信号播放快门声）
 spawn-at-startup "~/.config/niri/scripts/screenshot-sound.sh"
-// alt+tab切换器（这是一个第三方，无缩略图显示的切换器）
+
+// 第三方 Alt+Tab 切换器（无缩略图，已禁用）
 //spawn-at-startup "niriswitcher"
-// niri-siderbar
-// 允许root通过用户的xwayland打开窗口
-// nirius
+
+// Nirius 守护进程（工作区管理增强）
 spawn-at-startup "niriusd"
 
-// 取消启动niri时自动开启快捷键教程
+// 启动时跳过"重要快捷键"弹窗提示
 hotkey-overlay {
-    // Uncomment this line to disable the "Important Hotkeys" pop-up at startup.
-     skip-at-startup
+    skip-at-startup
 }
 
-// 隐藏窗口标题栏
+// 隐藏窗口标题栏（客户端装饰 CSD）
+// 窗口自行绘制标题栏，节省屏幕空间
 prefer-no-csd
 
+// 屏幕放大镜
 magnifier {
-    // off
-    zoom-factor 3
-    track-cursor false 
-    //scale-cursor false
+    // off：禁用
+    zoom-factor 3       // 放大倍率
+    track-cursor false  // 是否跟随光标移动
+    //scale-cursor false // 是否同步放大光标
 }
 
+// 网格总览（所有工作区平铺展示）
 grid-overview {
-    gap 16
-    padding 80
-    focused-column-scale 1.04
-    grid-all-monitors true
+    gap 16             // 工作区间距
+    padding 80         // 边缘内边距
+    focused-column-scale 1.04  // 当前聚焦工作区缩放（视觉突出）
+    grid-all-monitors true     // 跨显示器显示所有工作区
 }
 
+// 调试选项
 debug {
-	// 放宽聚焦拦截，修复点击托盘程序无法跳转聚焦的问题。
-	honor-xdg-activation-with-invalid-serial
+    // 放宽 XDG Activation 序列号校验
+    // 修复托盘程序（如微信、QQ）点击后无法正确聚焦窗口的问题
+    honor-xdg-activation-with-invalid-serial
 }
-
-

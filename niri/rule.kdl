@@ -1,28 +1,45 @@
-// Window rules let you adjust behavior for individual windows.
-// Find more information on the wiki:
-// https://yalter.github.io/niri/Configuration:-Window-Rules
+// Niri 窗口规则配置文件
+// 窗口规则用于按 app-id/title 匹配窗口，设置行为属性
+// 匹配优先级：从上到下，后匹配的规则会覆盖先匹配的
+// app-id：应用程序标识（可通过 niri pick 命令获取）
+// title：窗口标题（支持正则表达式）
 
-
-// 放进overview里的壁纸程序
-layer-rule{
+// ==================== 图层规则 ====================
+// Layer Rule：控制图层 Shell（壁纸、面板等）的行为
+layer-rule {
+    // 将 awww 壁纸守护进程放入 backdrop 层
+    // place-within-backdrop=true：窗口显示在桌面背景之后、其他窗口之前
+    // 用于实现桌面壁纸效果
     match namespace="awww-daemonoverview"
     match namespace="swww-daemonoverview"
-     place-within-backdrop true
+    place-within-backdrop true
 }
-// 全局窗口规则
+
+// ==================== 全局窗口规则 ====================
 window-rule {
-    // 这一行规则可以让niri变成传统桌面那样的堆叠式桌面。
+    // open-floating=true：所有窗口默认浮动（传统桌面风格）
+    // 注释掉以使用默认的平铺布局
     //open-floating true
-    // 全局透明度
-     opacity 0.97
-    // 圆角
+    
+    // 全局透明度（0.0-1.0）
+    // 0.97 轻微透明，保留桌面可见性
+    opacity 0.97
+    
+    // 窗口圆角半径（像素）
     geometry-corner-radius 8
-    // 去掉超出圆角的窗口内容
+    
+    // 裁剪超出圆角的窗口内容
+    // 避免窗口直角溢出圆角边界
     clip-to-geometry true
-    // 禁止边框画到背景里
+    
+    // 边框绘制模式
+    // false：边框绘制在窗口外部，不与窗口背景混合
+    // true：边框绘制在窗口背景之上
     draw-border-with-background false
 }
-// 取消图片预览、视频播放器之类的透明度，并且以浮动模式打开
+
+// ==================== 媒体类窗口 ====================
+// 图片查看器、视频播放器等：取消透明度，浮动打开
 window-rule {
     match title="图片查看器"
     match title="画中画"
@@ -31,190 +48,234 @@ window-rule {
     open-floating true
     opacity 1.0
 }
-// 取消特定软件的背景透明度
+
+// 特定应用：取消透明度（保持平铺）
 window-rule {
     match app-id="mpv"
     match app-id="celluloid"
     match app-id="virt-manager"
-    opacity 1.0 
+    opacity 1.0
 }
 
-// niri-siderbar需要的全局窗口规则
+// 浮动窗口最小尺寸限制
+// 防止窗口过小导致无法操作
 window-rule {
     match is-floating=true
     min-width 100
     min-height 100
 }
 
-// 以浮动模式打开imv（一个轻量化图片预览程序）且不自动聚焦
+// ==================== 图片预览器 ====================
+// imv：轻量级图片预览器，浮动打开，不自动聚焦
 window-rule {
     match app-id="imv"
     open-floating true
-    }
-//shorinclip剪贴板TUI 
-window-rule{
-	match app-id="shorinclip"
-	match app-id="cliphist-tui"
-	default-column-width { fixed 625; }
-    default-window-height { fixed 700; }
-    //min-height 800
-	open-floating true
-	default-floating-position x=0 y=18 relative-to="top"
 }
-// bilibili webapp 的窗口规则，以标签页模式打开
-window-rule{
-	match app-id="WebApp-bilibili8002"
-	 default-column-display "tabbed"
-}
-// 以浮动模式打开的软件
+
+// ==================== 剪贴板管理器 ====================
+// cliphist-tui：终端剪贴板管理器
+// 固定尺寸，浮动打开，定位到顶部
 window-rule {
-    // This app-id regular expression will work for both:
-    // - host Firefox (app-id is "firefox")
-    // - Flatpak Firefox (app-id is "org.mozilla.firefox")
+    match app-id="cliphist-tui"
+    default-column-width { fixed 625; }
+    default-window-height { fixed 700; }
+    open-floating true
+    // 相对于屏幕顶部定位（x=0, y=18）
+    default-floating-position x=0 y=18 relative-to="top"
+}
+
+// ==================== WebApp 规则 ====================
+// Bilibili WebApp：以标签页模式打开
+window-rule {
+    match app-id="WebApp-bilibili8002"
+    default-column-display "tabbed"
+}
+
+// ==================== 浮动应用列表 ====================
+// 以下应用始终以浮动模式打开
+window-rule {
+    // Satty：截图编辑器
     match app-id="com.gabm.satty"
+    // MediaInfo：媒体信息查看器
     match app-id="media_info"
+    // Video2GIF：视频转 GIF 工具
     match app-id="video2gif"
+    // 浮动终端（自定义 app-id）
     match app-id="floating-term"
+    // 网络连接编辑器
     match app-id="nm-connection-editor"
+    // Niri 快速切换器
     match app-id="niri-quick-switch"
+    // Firefox 画中画窗口
     match app-id=r#"firefox$"# title="^Picture-in-Picture$"
+    // 蓝牙管理器
     match app-id="blueberry.py" title="蓝牙"
     match app-id="blueman-manager"
+    // Flameshot：截图工具
     match app-id="flameshot"
-    match app-id="com.github.hluk.copyq" 
+    // CopyQ：剪贴板管理器
+    match app-id="com.github.hluk.copyq"
+    // Gradia：图像标注工具
     match app-id="be.alexandervanhee.gradia"
+    // Pavucontrol：音量控制
     match app-id="org.pulseaudio.pavucontrol" title="音量控制"
+    // GNOME 时钟
     match app-id="org.gnome.clocks" title="时钟"
+    // Fcitx5 输入法窗口
     match app-id="fcitx" title="Fcitx5 Input Window"
+    // 文件归档器
     match app-id="org.gnome.FileRoller"
+    // Thunar 文件操作进度
     match app-id="thunar" title="文件操作进度"
+    // Waypaper：壁纸切换器
     match app-id="waypaper"
+    // Clipse：剪贴板 GUI
     match app-id="clipse-gui"
+    // MPV：视频播放器
     match app-id="mpv"
+    // 聊天记录窗口
     match title="群聊的聊天记录"
     match title="聊天记录"
     match title="群相册"
     match title="日历"
     match title="重命名"
+    // Btrfs 管理器
     match app-id="btrfs-assistant"
+    // Markpix：图像标注
     match app-id="markpix"
-    match title="Steam 设置" 
+    // Steam 设置
+    match title="Steam 设置"
+    // 文件保存对话框
     match title="另存为"
+    // Better Control：系统设置
     match app-id="better_control.py"
+    // Niri 快捷键菜单
     match app-id="niri-hotkey-menu"
+    // Pinapp：应用固定工具
     match app-id="io.github.fabrialberio.pinapp"
+    // GNOME 计算器
     match app-id="org.gnome.Calculator"
+    // 浮动 MPV 实例
     match app-id="floating-mpv"
+    // Thunar 文件管理器
     match app-id="thunar"
+    // ShowMeTheKey：按键显示
     match app-id="one.alynx.showmethekey"
-    match app-id="io.github.shorin.proton_wrapper_configure"
-    match app-id="io.github.shorin.proton_wrapper_manager"
-    match app-id="com.wordlens.app"
-    match app-id="io.github.shorin_kiwata.NiriDisplaySettings"
+    // Proton Wrapper：Steam 兼容层工具
+    match app-id="proton_wrapper_configure"
+    match app-id="proton_wrapper_manager"
+    // WordLens：翻译工具
+    match app-id="wordlens"
+    // NiriDisplaySettings：显示设置
+    match app-id="NiriDisplaySettings"
     open-floating true
 }
-// 开启后不聚焦的窗口
+
+// ==================== 不聚焦窗口 ====================
+// 打开时不自动获取焦点的窗口
 window-rule {
     match app-id="QQ" title="资料卡"
     match app-id="QQ" title="天气"
     open-focused false
 }
-// steam 好友列表
+
+// ==================== Steam 规则 ====================
+// Steam 好友列表：固定宽度比例
 window-rule {
     match app-id="steam" title="Friends List"
     match app-id="steam" title="好友列表"
+    // proportion：占屏幕宽度的比例（0.20 = 20%）
     default-column-width { proportion 0.20; }
-
 }
 
-// waybar命令中心模块
+// ==================== 命令中心 ====================
+// Waybar 命令中心模块：固定尺寸浮动
 window-rule {
     match app-id="command-center"
-default-column-width { fixed 1000; }
+    default-column-width { fixed 1000; }
     default-window-height { fixed 600; }
     open-floating true
 }
-//快速终端和笔记
+
+// ==================== 快速终端/笔记 ====================
+// 定位到左上角（x=20, y=20）
 window-rule {
     match app-id="notebook"
     match app-id="quickterminal"
-	open-floating true
-	default-floating-position x=20 y=20 relative-to="top"
+    open-floating true
+    default-floating-position x=20 y=20 relative-to="top"
 }
-window-rule{
+
+// ==================== TUI 工具 ====================
+// 蓝牙/网络 TUI 工具：固定尺寸浮动
+window-rule {
     match app-id="bluetui"
     match app-id="impala"
     match app-id="network-tui"
-default-column-width { fixed 800; }
+    default-column-width { fixed 800; }
     default-window-height { fixed 800; }
-	open-floating true
+    open-floating true
 }
+
+// Clipse 剪贴板：固定尺寸浮动
 window-rule {
-	    match app-id="clipse"
-	default-column-width { fixed 625; }
+    match app-id="clipse"
+    default-column-width { fixed 625; }
     default-window-height { fixed 700; }
-	open-floating true
+    open-floating true
 }
-    // waydroid调整
+
+// ==================== Waydroid ====================
+// Android 模拟器：全屏浮动，禁用焦点环和阴影
 window-rule {
     match title="gsr ui"
     match app-id="waydroid"
     open-fullscreen true
     open-floating true
-    focus-ring{
+    focus-ring {
         off
     }
     shadow {
-    off
+        off
     }
 }
 
-
+// ==================== WezTerm ====================
+// 终端模拟器：使用默认列宽度
 window-rule {
-    // This regular expression is intentionally made as specific as possible,
-    // since this is the default config, and we want no false positives.
-    // You can get away with just app-id="wezterm" if you want.
     match app-id=r#"^org\.wezfurlong\.wezterm$"#
     default-column-width {}
 }
-/-window-rule {
-    // This app-id regular expression will work for both:
-    // - host Firefox (app-id is "firefox")
-    // - Flatpak Firefox (app-id is "org.mozilla.firefox")
-    default-floating-position x=0 y=0 relative-to="bottom-right"
-    open-floating true
-}
-// window-rule {
-//     // This app-id regular expression will work for both:
-//     // - host Firefox (app-id is "firefox")
-//     // - Flatpak Firefox (app-id is "org.mozilla.firefox")
 
-//     match app-id="blueman-manager" title="蓝牙设备"
-//     match app-id="org.pulseaudio.pavucontrol" title="音量控制"
-//     default-floating-position x=0 y=0 relative-to="top-right"
-//     open-floating true
-// }
-// Example: block out two password managers from screen capture.
-// (This example rule is commented out with a "/-" in front.)
+// ==================== 隐私保护 ====================
+// 从屏幕录制/截图中屏蔽的窗口
+// 用于保护密码管理器、聊天软件等隐私内容
 window-rule {
+    // KeePassXC：密码管理器
     match app-id=r#"^org\.keepassxc\.KeePassXC$"#
+    // GNOME Secrets：密码管理器
     match app-id=r#"^org\.gnome\.World\.Secrets$"#
+    // 微信
     match app-id="wechat"
+    // Gemini AI Studio WebApp
     match app-id="^WebApp-GeminiAiStudio1566$"
+    // block-out-from：屏蔽来源
+    // "screen-capture"：屏蔽屏幕录制和截图
+    // "screencast"：仅屏蔽屏幕录制（截图可见）
     block-out-from "screen-capture"
-
-    // Use this instead if you want them visible on third-party screenshot tools.
     // block-out-from "screencast"
 }
 
-// steam好友弹窗修复
+// ==================== Steam 通知修复 ====================
+// Steam 好友弹窗：定位到右下角，不自动聚焦
 window-rule {
     match app-id="steam" title=r#"^notificationtoasts_\d+_desktop$"#
     default-floating-position x=10 y=10 relative-to="bottom-right"
     open-focused false
 }
 
-// 忽略grid
+// ==================== Grid Overview 排除 ====================
+// 从网格总览中排除的窗口
 window-rule {
     match app-id="steam"
     match app-id="steam" title=r#"^notificationtoasts_\d+_desktop$"#
